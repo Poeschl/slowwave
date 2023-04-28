@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.7.22'
     id 'org.jetbrains.kotlin.plugin.spring' version '1.7.22'
+    id "io.ktor.plugin" version "2.3.0"
 }
 
 group = 'xyz.poeschl'
@@ -14,10 +15,12 @@ repositories {
 }
 
 dependencies {
-    implementation platform('io.projectreactor:reactor-bom:2022.0.6')
-    implementation 'io.projectreactor.netty:reactor-netty-core'
-
-    testImplementation 'io.projectreactor:reactor-test'
+    implementation "io.ktor:ktor-server-core"
+    implementation "io.ktor:ktor-server-netty"
+    implementation "io.ktor:ktor-network"
+    implementation 'io.github.microutils:kotlin-logging-jvm:2.1.21'
+    implementation "ch.qos.logback:logback-classic:1.4.7"
+    implementation 'com.xenomachina:kotlin-argparser:2.0.7'
 }
 
 tasks.withType(KotlinCompile).configureEach {
@@ -29,4 +32,8 @@ tasks.withType(KotlinCompile).configureEach {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+application {
+    mainClass = "xyz.poeschl.slowwave.SlowwaveApplicationKt"
 }
