@@ -11,7 +11,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import xyz.poeschl.slowwave.commands.Help
+import xyz.poeschl.slowwave.commands.*
 
 class SlowwaveTestApplication(host: String, listeningPort: Int) {
 
@@ -24,6 +24,10 @@ class SlowwaveTestApplication(host: String, listeningPort: Int) {
   private val serverSocket = aSocket(selectorManager).tcp().bind(host, listeningPort)
 
   private val helpCommand = Help()
+  private val sizeCommand = Size()
+  private val pixelDrawCommand = PixelDraw()
+  private val pixelRetrieveCommand = PixelRetrieve()
+  private val offsetCommand = Offset()
 
   fun run() {
     runBlocking {
@@ -46,8 +50,12 @@ class SlowwaveTestApplication(host: String, listeningPort: Int) {
                 val command = parsedCmd[0]
 
                 val response =
-                  when (command) {
-                    helpCommand.command -> helpCommand.handleCommand(parsedCmd)
+                  when {
+                    command == helpCommand.command -> helpCommand.handleCommand(parsedCmd)
+                    command == sizeCommand.command -> sizeCommand.handleCommand(parsedCmd)
+                    command == pixelDrawCommand.command && parsedCmd.size > 3 -> pixelDrawCommand.handleCommand(parsedCmd)
+                    command == pixelRetrieveCommand.command && parsedCmd.size == 3 -> pixelRetrieveCommand.handleCommand(parsedCmd)
+                    command == offsetCommand.command -> offsetCommand.handleCommand(parsedCmd)
                     else -> ""
                   }
 
