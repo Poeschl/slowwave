@@ -11,18 +11,22 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
+import xyz.poeschl.slowwave.commands.Help
 
-class SlowwaveTestApplication(private val listeningPort: Int) {
+class SlowwaveTestApplication(host: String, listeningPort: Int) {
 
   companion object {
+
     private val LOGGER = KotlinLogging.logger {}
   }
 
+  private val selectorManager = SelectorManager(Dispatchers.IO)
+  private val serverSocket = aSocket(selectorManager).tcp().bind(host, listeningPort)
+
+  private val helpCommand = Help()
+
   fun run() {
     runBlocking {
-      val selectorManager = SelectorManager(Dispatchers.IO)
-      val serverSocket = aSocket(selectorManager).tcp().bind("localhost", listeningPort)
-
       LOGGER.info { "Server is listening at ${serverSocket.localAddress}" }
 
       while (true) {
@@ -34,13 +38,20 @@ class SlowwaveTestApplication(private val listeningPort: Int) {
           val receiveChannel = socket.openReadChannel()
           val sendChannel = socket.openWriteChannel(autoFlush = true)
 
-
           try {
             while (socket.isActive) {
               val input = receiveChannel.readUTF8Line()
               if (input != null) {
-                LOGGER.info { "Echoing $input" }
-                sendChannel.writeStringUtf8(input)
+                val parsedCmd = input.split(" ")
+                val command = parsedCmd[0]
+
+                val response =
+                  when (command) {
+                    helpCommand.command -> helpCommand.handleCommand(parsedCmd)
+                    else -> ""
+                  }
+
+                sendChannel.writeStringUtf8(response)
               } else {
                 socket.close()
               }
@@ -55,12 +66,15 @@ class SlowwaveTestApplication(private val listeningPort: Int) {
 }
 
 fun main(args: Array<String>) = mainBody {
-  ArgParser(args). parseInto(::Args).run {
-    SlowwaveTestApplication(this.port).run()
+  ArgParser(args).parseInto(::Args).run {
+    SlowwaveTestApplication(this.host, this.port).run()
   }
 }
 
 class Args(parser: ArgParser) {
-  val port by parser.storing("-p", "--port", help = "The listening port of the server. (Default: 1234)") { toInt() }.default(1234)
+  val host by parser.storing("--host", help = "The listening ip of the server. (Default: 0.0.0.0)") { toString() }
+    .default("0.0.0.0")
+  val port by parser.storing("-p", "--port", help = "The listening port of the server. (Default: 1234)") { toInt() }
+    .default(1234)
 
 }
