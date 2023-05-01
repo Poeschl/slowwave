@@ -1,8 +1,9 @@
 package xyz.poeschl.slowwave.commands
 
 import mu.KotlinLogging
+import xyz.poeschl.kixelflut.PixelMatrix
 
-class Size : BaseCommand {
+class Size(private val pixelMatrix: PixelMatrix) : BaseCommand {
 
   companion object {
     private val LOGGER = KotlinLogging.logger { }
@@ -11,7 +12,7 @@ class Size : BaseCommand {
   override val command = "SIZE"
 
   override fun handleCommand(request: List<String>): String {
-    LOGGER.info { "Retrieve playground size" }
-    return "SIZE 100 100"
+    LOGGER.debug { "Retrieve playground size" }
+    return "SIZE ${pixelMatrix.width} ${pixelMatrix.height}"
   }
 }

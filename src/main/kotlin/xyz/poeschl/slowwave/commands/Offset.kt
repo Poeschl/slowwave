@@ -11,7 +11,7 @@ class Offset : BaseCommand {
   override val command = "OFFSET"
 
   override fun handleCommand(request: List<String>): String {
-    LOGGER.info { "Set a offset" }
-    return ""
+    LOGGER.debug { "Set a offset" }
+    return "NOT IMPLEMENTED"
   }
 }
