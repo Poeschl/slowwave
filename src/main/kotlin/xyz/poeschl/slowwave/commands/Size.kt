@@ -12,6 +12,6 @@ class Size : BaseCommand {
 
   override fun handleCommand(request: List<String>): String {
     LOGGER.info { "Retrieve playground size" }
-    return "SIZE 10 10"
+    return "SIZE 100 100"
   }
 }
