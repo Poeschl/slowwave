@@ -1,0 +1,8 @@
+version: "3"
+services:
+  pawner:
+    image: ghcr.io/poeschl/pixelpwnr
+    volumes:
+      - .:/images
+    network_mode: "host"
+    command: "127.0.0.1:1234 -i /images/mate.png -c 1"
