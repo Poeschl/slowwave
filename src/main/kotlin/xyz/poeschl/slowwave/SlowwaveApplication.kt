@@ -59,7 +59,7 @@ class SlowwaveTestApplication(host: String, listeningPort: Int) {
                     else -> ""
                   }
 
-                sendChannel.writeStringUtf8(response)
+                sendChannel.writeStringUtf8(response + "\n")
               } else {
                 socket.close()
               }
