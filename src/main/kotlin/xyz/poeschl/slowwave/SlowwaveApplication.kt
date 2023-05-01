@@ -13,7 +13,7 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import xyz.poeschl.slowwave.commands.*
 
-class SlowwaveTestApplication(host: String, listeningPort: Int) {
+class SlowwaveApplication(host: String, listeningPort: Int) {
 
   companion object {
 
@@ -75,7 +75,7 @@ class SlowwaveTestApplication(host: String, listeningPort: Int) {
 
 fun main(args: Array<String>) = mainBody {
   ArgParser(args).parseInto(::Args).run {
-    SlowwaveTestApplication(this.host, this.port).run()
+    SlowwaveApplication(this.host, this.port).run()
   }
 }
 
