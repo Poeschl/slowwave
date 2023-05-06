@@ -16,7 +16,7 @@ import mu.KotlinLogging
 import xyz.poeschl.kixelflut.PixelMatrix
 import xyz.poeschl.slowwave.commands.*
 
-class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: Int) {
+class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: Int, webport: Int) {
 
   companion object {
     private val LOGGER = KotlinLogging.logger {}
@@ -26,6 +26,7 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
   private val serverSocket = aSocket(selectorManager).tcp().bind(host, listeningPort)
 
   private val pixelMatrix = PixelMatrix(width, height)
+  private val imageServer = ImageServer(host, webport, pixelMatrix)
 
   private val helpCommand = Help()
   private val sizeCommand = Size(pixelMatrix)
@@ -37,6 +38,7 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
     runBlocking {
       LOGGER.info { "Server is listening at ${serverSocket.localAddress}" }
 
+      imageServer.start()
       while (true) {
         val socket = serverSocket.accept()
         LOGGER.info { "Accepted connection from ${socket.remoteAddress}" }
@@ -86,7 +88,7 @@ fun main(args: Array<String>) = mainBody {
         Level.INFO
       }
 
-    SlowwaveApplication(host, port, width, height).run()
+    SlowwaveApplication(host, port, width, height, webport).run()
   }
 }
 
@@ -94,8 +96,10 @@ class Args(parser: ArgParser) {
   val debug by parser.flagging("--debug", help = "Enable debug output").default(false)
   val host by parser.storing("--host", help = "The listening ip of the server. (Default: 0.0.0.0)") { toString() }
     .default("0.0.0.0")
-  val port by parser.storing("-p", "--port", help = "The listening port of the server. (Default: 1234)") { toInt() }
+  val port by parser.storing("--port", help = "The listening port of the server. (Default: 1234)") { toInt() }
     .default(1234)
+  val webport by parser.storing("--web-port", help = "The listening port of the web server. (Default: 8080)") { toInt() }
+    .default(8080)
   val width by parser.storing("--width", help = "The width of the pixelflut screen. (Default: 100)") { toInt() }
     .default(100)
   val height by parser.storing("--height", help = "The height of the pixelflut screen. (Default: 100)") { toInt() }
