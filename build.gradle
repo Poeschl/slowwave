@@ -1,40 +1,63 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+import java.util.regex.Matcher
+
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.8.21'
-    id 'org.jetbrains.kotlin.plugin.spring' version '1.8.21'
-    id "io.ktor.plugin" version "2.3.0"
+  id 'org.jetbrains.kotlin.jvm' version '1.8.21'
+  id 'org.jetbrains.kotlin.plugin.spring' version '1.8.21'
+  id "io.ktor.plugin" version "2.3.0"
+  id 'com.github.johnrengelman.shadow' version '8.1.1'
+  id 'net.researchgate.release' version '2.8.1'
 }
 
 group = 'xyz.poeschl'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '17'
+sourceCompatibility = JavaVersion.VERSION_17
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
-    implementation "io.ktor:ktor-server-core"
-    implementation "io.ktor:ktor-server-netty"
-    implementation "io.ktor:ktor-network"
-    implementation 'io.github.microutils:kotlin-logging-jvm:2.1.21'
-    implementation "ch.qos.logback:logback-classic:1.4.7"
-    implementation 'com.xenomachina:kotlin-argparser:2.0.7'
-    implementation 'xyz.poeschl:Kixelflut:2.1.0'
+  implementation "io.ktor:ktor-server-core"
+  implementation "io.ktor:ktor-server-netty"
+  implementation "io.ktor:ktor-network"
+  implementation 'io.github.microutils:kotlin-logging-jvm:2.1.21'
+  implementation "ch.qos.logback:logback-classic:1.4.7"
+  implementation 'com.xenomachina:kotlin-argparser:2.0.7'
+  implementation 'xyz.poeschl:Kixelflut:2.1.0'
 }
 
 tasks.withType(KotlinCompile).configureEach {
-    kotlinOptions {
-        freeCompilerArgs = ['-Xjsr305=strict']
-        jvmTarget = '17'
-    }
+
+  compilerOptions {
+    freeCompilerArgs = ['-Xjsr305=strict']
+  }
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
+test {
+  useJUnitPlatform()
 }
 
 application {
-    mainClass = "xyz.poeschl.slowwave.SlowwaveApplicationKt"
+  mainClass = "xyz.poeschl.slowwave.SlowwaveApplicationKt"
+}
+
+jar {
+  manifest {
+    attributes 'Main-Class': 'xyz.poeschl.slowwave.SlowwaveApplicationKt'
+  }
+}
+
+release {
+  buildTasks = []
+  preTagCommitMessage = ':bookmark: pre tag commit: '
+  tagCommitMessage = ':bookmark: creating tag: '
+  newVersionCommitMessage = ':bookmark: new version commit: '
+  git {
+    requireBranch = 'main'
+  }
+  versionPatterns = [
+      /(\d+)\.(\d+)\.(\d+)([^\d]*$)/: { Matcher m, Project p -> m.replaceAll("${m[0][1]}.${(m[0][2] as int) + 1}.${m[0][3]}${m[0][4]}") }
+  ]
 }
