@@ -38,15 +38,18 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
     runBlocking {
       LOGGER.info { "Server is listening at ${serverSocket.localAddress}" }
 
-      imageServer.start()
-      while (true) {
-        val socket = serverSocket.accept()
-        LOGGER.info { "Accepted connection from ${socket.remoteAddress}" }
-
         launch {
+            imageServer.start()
+        }
 
-          val receiveChannel = socket.openReadChannel()
-          val sendChannel = socket.openWriteChannel(autoFlush = true)
+        while (true) {
+            val socket = serverSocket.accept()
+            LOGGER.info { "Accepted connection from ${socket.remoteAddress}" }
+
+            launch {
+
+                val receiveChannel = socket.openReadChannel()
+                val sendChannel = socket.openWriteChannel(autoFlush = true)
 
           try {
             while (socket.isActive) {
