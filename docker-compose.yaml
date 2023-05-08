@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  slowwave:
+    restart: unless-stopped
+    image: ghcr.io/poeschl/slowwave
+    network_mode: "host"
+    command: --width 1280 --height 720
+
