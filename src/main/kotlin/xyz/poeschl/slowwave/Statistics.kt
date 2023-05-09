@@ -10,8 +10,8 @@ class Statistics {
   }
 
   private var pixelCount: Int = 0
-  var pixelPerSecond: Int = 0
-    private set
+  private var pixelPerSecond: Int = 0
+  private var createdTokens: Int = 0
 
   init {
     Timer().schedule(object : TimerTask() {
@@ -24,5 +24,15 @@ class Statistics {
 
   fun increasePixelCount() {
     pixelCount++
+  }
+
+  fun increaseTokenCount() {
+    createdTokens++
+  }
+
+  fun getOutput(): String {
+    return """
+           { "pixel_per_second": ${pixelPerSecond}, "createdToken": $createdTokens }
+           """.trimIndent()
   }
 }

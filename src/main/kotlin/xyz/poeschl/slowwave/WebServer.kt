@@ -38,11 +38,7 @@ class WebServer(host: String, port: Int, private val pixelMatrix: PixelMatrix, p
         handleImageWebCall(call)
       }
       get("/stats") {
-        call.respondText(ContentType("text", "json"), HttpStatusCode.OK) {
-          """
-                        { "pixel_per_second": ${statistics.pixelPerSecond} }
-                    """.trimIndent()
-        }
+        call.respondText(ContentType("text", "json"), HttpStatusCode.OK) { statistics.getOutput() }
       }
     }
   }

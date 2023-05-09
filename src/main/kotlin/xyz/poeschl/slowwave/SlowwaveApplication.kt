@@ -14,13 +14,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import xyz.poeschl.kixelflut.PixelMatrix
-import xyz.poeschl.slowwave.commands.Help
-import xyz.poeschl.slowwave.commands.Offset
-import xyz.poeschl.slowwave.commands.Px
-import xyz.poeschl.slowwave.commands.Size
+import xyz.poeschl.slowwave.commands.*
 import xyz.poeschl.slowwave.filter.FilterManager
 
-class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: Int, webport: Int) {
+class SlowwaveApplication(host: String, listeningPort: Int,
+                          width: Int, height: Int,
+                          webport: Int,
+                          tokenFlag: Boolean, useCountPerToken: Int) {
 
   companion object {
     private val LOGGER = KotlinLogging.logger {}
@@ -39,10 +39,12 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
   private val sizeCommand = Size(pixelMatrix)
   private val pxCommand = Px(pxCommandFilters, pixelMatrix, statistics)
   private val offsetCommand = Offset()
+  private val tokenCommand = Token(tokenFlag, useCountPerToken, statistics)
 
   @OptIn(ExperimentalCoroutinesApi::class)
   fun run() {
     pxCommandFilters.addFilter(offsetCommand.getFilter())
+    pxCommandFilters.addFilter(tokenCommand.getFilter())
 
     runBlocking {
       LOGGER.info { "Server is listening at ${serverSocket.localAddress}" }
@@ -66,10 +68,11 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
 
                 val response =
                     when (request.cmd[0]) {
-                      helpCommand.command -> helpCommand.handleCommand(request)
-                      sizeCommand.command -> sizeCommand.handleCommand(request)
                       pxCommand.command -> pxCommand.handleCommand(request)
+                      tokenCommand.command -> tokenCommand.handleCommand(request)
+                      sizeCommand.command -> sizeCommand.handleCommand(request)
                       offsetCommand.command -> offsetCommand.handleCommand(request)
+                      helpCommand.command -> helpCommand.handleCommand(request)
                       else -> ""
                     }
 
@@ -80,7 +83,9 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
               }
             }
           } catch (e: Throwable) {
-            offsetCommand.removeOffsetForSocket(socket.remoteAddress.toString())
+            val socketIdentifier = socket.remoteAddress.toString()
+            tokenCommand.removeTokensForSocket(socketIdentifier)
+            offsetCommand.removeOffsetForSocket(socketIdentifier)
             socket.close()
           }
         }
@@ -98,7 +103,7 @@ fun main(args: Array<String>) = mainBody {
           Level.INFO
         }
 
-    SlowwaveApplication(host, port, width, height, webport).run()
+    SlowwaveApplication(host, port, width, height, webport, tokenFlag, useCountPerToken).run()
   }
 }
 
@@ -115,4 +120,7 @@ class Args(parser: ArgParser) {
   val height by parser.storing("--height", help = "The height of the pixelflut screen. (Default: 100)") { toInt() }
       .default(100)
 
+  val tokenFlag by parser.flagging("--token", help = "Enable the TOKEN command. (Default: false)").default(false)
+  val useCountPerToken by parser.storing("--useCountPerToken", help = "How often a token can be used (Default: 100)") { toInt() }
+      .default(100)
 }

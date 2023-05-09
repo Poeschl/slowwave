@@ -1,5 +1,7 @@
 package xyz.poeschl.slowwave.filter
 
+import xyz.poeschl.slowwave.FilterException
+
 class FilterManager<T> {
 
   private val registeredFilter = mutableListOf<BaseFilter<T>>()
@@ -12,6 +14,7 @@ class FilterManager<T> {
     registeredFilter.clear()
   }
 
+  @Throws(FilterException::class)
   fun applyAllFilter(request: T): T {
     var currentList = request
     registeredFilter.forEach { currentList = it.applyFilter(currentList) }

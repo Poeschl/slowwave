@@ -4,11 +4,8 @@ import mu.KotlinLogging
 import xyz.poeschl.kixelflut.Pixel
 import xyz.poeschl.kixelflut.PixelMatrix
 import xyz.poeschl.kixelflut.Point
-import xyz.poeschl.slowwave.PxRequest
-import xyz.poeschl.slowwave.Request
-import xyz.poeschl.slowwave.Statistics
+import xyz.poeschl.slowwave.*
 import xyz.poeschl.slowwave.filter.FilterManager
-import xyz.poeschl.slowwave.toHex
 import java.awt.Color
 
 class Px(private val drawFilters: FilterManager<PxRequest>,
@@ -30,13 +27,18 @@ class Px(private val drawFilters: FilterManager<PxRequest>,
   }
 
   private fun draw(request: PxRequest): String {
-    val modifiedRequest = drawFilters.applyAllFilter(request)
-    val pixel = modifiedRequest.pixel
+    return try {
+      val modifiedRequest = drawFilters.applyAllFilter(request)
+      val pixel = modifiedRequest.pixel
 
-    LOGGER.debug { "Drawing pixel (${pixel.point.x}, ${pixel.point.y}) -> #${pixel.color.toHex()}" }
-    pixelMatrix.insert(pixel)
-    statistics.increasePixelCount()
-    return ""
+      LOGGER.debug { "Drawing pixel (${pixel.point.x}, ${pixel.point.y}) -> #${pixel.color.toHex()}" }
+      pixelMatrix.insert(pixel)
+      statistics.increasePixelCount()
+      ""
+    } catch (filterEx: FilterException) {
+      LOGGER.debug { "Draw exception: ${filterEx.message}" }
+      filterEx.message ?: "ERROR"
+    }
   }
 
   private fun retrieve(request: List<String>): String {

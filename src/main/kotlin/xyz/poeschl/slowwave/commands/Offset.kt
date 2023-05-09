@@ -41,7 +41,7 @@ class Offset : BaseCommand {
   class OffsetFilter(private val offsetCommand: Offset) : BaseFilter<PxRequest> {
     override fun applyFilter(input: PxRequest): PxRequest {
       val offset = offsetCommand.getOffsetForSocket(input.remote)
-      return PxRequest(input.remote, Pixel(input.pixel.point.plus(offset), input.pixel.color))
+      return input.withNewPixel(Pixel(input.pixel.point.plus(offset), input.pixel.color))
     }
   }
 }
