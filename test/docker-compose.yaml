@@ -5,4 +5,4 @@ services:
     volumes:
       - .:/images
     network_mode: "host"
-    command: "127.0.0.1:1234 -i /images/mate.png -c 2"
+    command: "127.0.0.1:1234 -i /images/mate.png -c 4"

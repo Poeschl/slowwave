@@ -23,7 +23,7 @@ class WebServer(host: String, port: Int, private val pixelMatrix: PixelMatrix, p
     private val LOGGER = KotlinLogging.logger {}
 
     private const val BYTE_UPDATE_INTERVAL: Long = 100
-    private const val WEBPAGE_IMAGE_UPDATE_INTERVAL = 250
+    private const val WEBPAGE_IMAGE_UPDATE_INTERVAL = 300
   }
 
   private var imageData = ByteArray(0)

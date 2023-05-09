@@ -9,7 +9,7 @@ import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
@@ -35,6 +35,7 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
   private val pixelRetrieveCommand = PixelRetrieve(pixelMatrix)
   private val offsetCommand = Offset()
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   fun run() {
     runBlocking {
       LOGGER.info { "Server is listening at ${serverSocket.localAddress}" }
@@ -46,13 +47,12 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
       while (true) {
         val socket = serverSocket.accept()
         LOGGER.info { "Accepted connection from ${socket.remoteAddress}" }
-
-        launch {
+        launch(Dispatchers.IO) {
           val receiveChannel = socket.openReadChannel()
           val sendChannel = socket.openWriteChannel(autoFlush = true)
 
           try {
-            while (socket.isActive) {
+            while (receiveChannel.availableForRead > 0) {
               val input = receiveChannel.readUTF8Line()
               if (input != null) {
                 val parsedCmd = input.split(" ")
@@ -76,7 +76,6 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
           } catch (e: Throwable) {
             socket.close()
           }
-
         }
       }
     }
