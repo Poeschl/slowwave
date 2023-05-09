@@ -26,11 +26,12 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
   private val serverSocket = aSocket(selectorManager).tcp().bind(host, listeningPort)
 
   private val pixelMatrix = PixelMatrix(width, height)
-  private val imageServer = ImageServer(host, webport, pixelMatrix)
+  private val statistics = Statistics()
+  private val webServer = WebServer(host, webport, pixelMatrix, statistics)
 
   private val helpCommand = Help()
   private val sizeCommand = Size(pixelMatrix)
-  private val pixelDrawCommand = PixelDraw(pixelMatrix)
+  private val pixelDrawCommand = PixelDraw(pixelMatrix, statistics)
   private val pixelRetrieveCommand = PixelRetrieve(pixelMatrix)
   private val offsetCommand = Offset()
 
@@ -39,7 +40,7 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
       LOGGER.info { "Server is listening at ${serverSocket.localAddress}" }
 
       launch {
-        imageServer.start()
+        webServer.start()
       }
 
       while (true) {

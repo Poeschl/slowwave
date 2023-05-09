@@ -4,10 +4,11 @@ import mu.KotlinLogging
 import xyz.poeschl.kixelflut.Pixel
 import xyz.poeschl.kixelflut.PixelMatrix
 import xyz.poeschl.kixelflut.Point
+import xyz.poeschl.slowwave.Statistics
 import xyz.poeschl.slowwave.hexToColor
 import xyz.poeschl.slowwave.toHex
 
-class PixelDraw(private val pixelMatrix: PixelMatrix) : BaseCommand {
+class PixelDraw(private val pixelMatrix: PixelMatrix, private val statistics: Statistics) : BaseCommand {
 
   companion object {
     private val LOGGER = KotlinLogging.logger { }
@@ -20,6 +21,7 @@ class PixelDraw(private val pixelMatrix: PixelMatrix) : BaseCommand {
 
     LOGGER.debug { "Drawing pixel (${pixel.point.x}, ${pixel.point.y}) -> #${pixel.color.toHex()}" }
     pixelMatrix.insert(pixel)
+    statistics.increasePixelCount()
     return ""
   }
 }
