@@ -38,18 +38,17 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
     runBlocking {
       LOGGER.info { "Server is listening at ${serverSocket.localAddress}" }
 
+      launch {
+        imageServer.start()
+      }
+
+      while (true) {
+        val socket = serverSocket.accept()
+        LOGGER.info { "Accepted connection from ${socket.remoteAddress}" }
+
         launch {
-            imageServer.start()
-        }
-
-        while (true) {
-            val socket = serverSocket.accept()
-            LOGGER.info { "Accepted connection from ${socket.remoteAddress}" }
-
-            launch {
-
-                val receiveChannel = socket.openReadChannel()
-                val sendChannel = socket.openWriteChannel(autoFlush = true)
+          val receiveChannel = socket.openReadChannel()
+          val sendChannel = socket.openWriteChannel(autoFlush = true)
 
           try {
             while (socket.isActive) {
@@ -59,14 +58,14 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
                 val command = parsedCmd[0]
 
                 val response =
-                  when {
-                    command == helpCommand.command -> helpCommand.handleCommand(parsedCmd)
-                    command == sizeCommand.command -> sizeCommand.handleCommand(parsedCmd)
-                    command == pixelDrawCommand.command && parsedCmd.size > 3 -> pixelDrawCommand.handleCommand(parsedCmd)
-                    command == pixelRetrieveCommand.command && parsedCmd.size == 3 -> pixelRetrieveCommand.handleCommand(parsedCmd)
-                    command == offsetCommand.command -> offsetCommand.handleCommand(parsedCmd)
-                    else -> ""
-                  }
+                    when {
+                      command == helpCommand.command -> helpCommand.handleCommand(parsedCmd)
+                      command == sizeCommand.command -> sizeCommand.handleCommand(parsedCmd)
+                      command == pixelDrawCommand.command && parsedCmd.size > 3 -> pixelDrawCommand.handleCommand(parsedCmd)
+                      command == pixelRetrieveCommand.command && parsedCmd.size == 3 -> pixelRetrieveCommand.handleCommand(parsedCmd)
+                      command == offsetCommand.command -> offsetCommand.handleCommand(parsedCmd)
+                      else -> ""
+                    }
 
                 sendChannel.writeStringUtf8(response + "\n")
               } else {
@@ -76,6 +75,7 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
           } catch (e: Throwable) {
             socket.close()
           }
+
         }
       }
     }
@@ -85,11 +85,11 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
 fun main(args: Array<String>) = mainBody {
   ArgParser(args).parseInto(::Args).run {
     (KotlinLogging.logger(Logger.ROOT_LOGGER_NAME).underlyingLogger as Logger).level =
-      if (debug) {
-        Level.DEBUG
-      } else {
-        Level.INFO
-      }
+        if (debug) {
+          Level.DEBUG
+        } else {
+          Level.INFO
+        }
 
     SlowwaveApplication(host, port, width, height, webport).run()
   }
@@ -98,14 +98,14 @@ fun main(args: Array<String>) = mainBody {
 class Args(parser: ArgParser) {
   val debug by parser.flagging("--debug", help = "Enable debug output").default(false)
   val host by parser.storing("--host", help = "The listening ip of the server. (Default: 0.0.0.0)") { toString() }
-    .default("0.0.0.0")
+      .default("0.0.0.0")
   val port by parser.storing("--port", help = "The listening port of the server. (Default: 1234)") { toInt() }
-    .default(1234)
+      .default(1234)
   val webport by parser.storing("--web-port", help = "The listening port of the web server. (Default: 8080)") { toInt() }
-    .default(8080)
+      .default(8080)
   val width by parser.storing("--width", help = "The width of the pixelflut screen. (Default: 100)") { toInt() }
-    .default(100)
+      .default(100)
   val height by parser.storing("--height", help = "The height of the pixelflut screen. (Default: 100)") { toInt() }
-    .default(100)
+      .default(100)
 
 }

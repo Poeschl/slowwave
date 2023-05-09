@@ -48,7 +48,7 @@ class ImageServer(host: String, port: Int, private val pixelMatrix: PixelMatrix)
         }, 0L, BYTE_UPDATE_INTERVAL)
 
 
-        webserver.start(wait = true)
+        webserver.start(wait = false)
     }
 
     private suspend fun handleWebpageCall(call: ApplicationCall) {
