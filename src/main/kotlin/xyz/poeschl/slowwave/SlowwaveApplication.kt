@@ -18,6 +18,7 @@ import xyz.poeschl.slowwave.commands.Help
 import xyz.poeschl.slowwave.commands.Offset
 import xyz.poeschl.slowwave.commands.Px
 import xyz.poeschl.slowwave.commands.Size
+import xyz.poeschl.slowwave.filter.FilterManager
 
 class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: Int, webport: Int) {
 
@@ -32,13 +33,17 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
   private val statistics = Statistics()
   private val webServer = WebServer(host, webport, pixelMatrix, statistics)
 
+  private val pxCommandFilters = FilterManager<PxRequest>()
+
   private val helpCommand = Help()
   private val sizeCommand = Size(pixelMatrix)
-  private val pxCommand = Px(pixelMatrix, statistics)
+  private val pxCommand = Px(pxCommandFilters, pixelMatrix, statistics)
   private val offsetCommand = Offset()
 
   @OptIn(ExperimentalCoroutinesApi::class)
   fun run() {
+    pxCommandFilters.addFilter(offsetCommand.getFilter())
+
     runBlocking {
       LOGGER.info { "Server is listening at ${serverSocket.localAddress}" }
 
@@ -57,23 +62,25 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
             while (receiveChannel.availableForRead > 0) {
               val input = receiveChannel.readUTF8Line()
               if (input != null) {
-                val parsedCmd = input.split(" ")
+                val request = Request(socket.remoteAddress.toString(), input.split(" "))
 
                 val response =
-                    when (parsedCmd[0]) {
-                      helpCommand.command -> helpCommand.handleCommand(parsedCmd)
-                      sizeCommand.command -> sizeCommand.handleCommand(parsedCmd)
-                      pxCommand.command -> pxCommand.handleCommand(parsedCmd)
-                      offsetCommand.command -> offsetCommand.handleCommand(parsedCmd)
+                    when (request.cmd[0]) {
+                      helpCommand.command -> helpCommand.handleCommand(request)
+                      sizeCommand.command -> sizeCommand.handleCommand(request)
+                      pxCommand.command -> pxCommand.handleCommand(request)
+                      offsetCommand.command -> offsetCommand.handleCommand(request)
                       else -> ""
                     }
 
                 sendChannel.writeStringUtf8(response + "\n")
               } else {
+                offsetCommand.removeOffsetForSocket(socket.remoteAddress.toString())
                 socket.close()
               }
             }
           } catch (e: Throwable) {
+            offsetCommand.removeOffsetForSocket(socket.remoteAddress.toString())
             socket.close()
           }
         }

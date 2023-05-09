@@ -14,7 +14,8 @@ A slow Pixelflut server with some other benefits.
 ## Features
 
 * Not high-performance
-* Default Pixelflut commands (`HELP`, `SIZE`, `PX`, ~~`OFFSET`~~(not for now))
+* Default [Pixelflut](https://github.com/defnull/pixelflut) commands (`HELP`, `SIZE`, `PX`)
+* `OFFSET` command for setting an offset for all `PX` commands on this connection.
 * Website at http://localhost:8080 for image output and some stats
 
 More coming soon...

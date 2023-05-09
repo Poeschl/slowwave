@@ -1,9 +1,11 @@
 package xyz.poeschl.slowwave.commands
 
+import xyz.poeschl.slowwave.Request
+
 class Help : BaseCommand {
 
     override val command = "HELP"
-    override fun handleCommand(request: List<String>): String = """
+    override fun handleCommand(request: Request): String = """
                _.====.._
              ,:._       ~-_
                  `\        ~-_
