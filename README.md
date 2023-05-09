@@ -41,7 +41,7 @@ An example flow:
 #         ||                                   ||        
 #      The token                      Remaining usage count
 
--> PX 1 1 a466bb98-492e-4770-a772-b0b477bf26a7
+-> PX 1 1 ff0000 a466bb98-492e-4770-a772-b0b477bf26a7
 <- 
 🮱
 ```
