@@ -14,7 +14,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import xyz.poeschl.kixelflut.PixelMatrix
-import xyz.poeschl.slowwave.commands.*
+import xyz.poeschl.slowwave.commands.Help
+import xyz.poeschl.slowwave.commands.Offset
+import xyz.poeschl.slowwave.commands.Px
+import xyz.poeschl.slowwave.commands.Size
 
 class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: Int, webport: Int) {
 
@@ -31,8 +34,7 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
 
   private val helpCommand = Help()
   private val sizeCommand = Size(pixelMatrix)
-  private val pixelDrawCommand = PixelDraw(pixelMatrix, statistics)
-  private val pixelRetrieveCommand = PixelRetrieve(pixelMatrix)
+  private val pxCommand = Px(pixelMatrix, statistics)
   private val offsetCommand = Offset()
 
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -56,15 +58,13 @@ class SlowwaveApplication(host: String, listeningPort: Int, width: Int, height: 
               val input = receiveChannel.readUTF8Line()
               if (input != null) {
                 val parsedCmd = input.split(" ")
-                val command = parsedCmd[0]
 
                 val response =
-                    when {
-                      command == helpCommand.command -> helpCommand.handleCommand(parsedCmd)
-                      command == sizeCommand.command -> sizeCommand.handleCommand(parsedCmd)
-                      command == pixelDrawCommand.command && parsedCmd.size > 3 -> pixelDrawCommand.handleCommand(parsedCmd)
-                      command == pixelRetrieveCommand.command && parsedCmd.size == 3 -> pixelRetrieveCommand.handleCommand(parsedCmd)
-                      command == offsetCommand.command -> offsetCommand.handleCommand(parsedCmd)
+                    when (parsedCmd[0]) {
+                      helpCommand.command -> helpCommand.handleCommand(parsedCmd)
+                      sizeCommand.command -> sizeCommand.handleCommand(parsedCmd)
+                      pxCommand.command -> pxCommand.handleCommand(parsedCmd)
+                      offsetCommand.command -> offsetCommand.handleCommand(parsedCmd)
                       else -> ""
                     }
 
