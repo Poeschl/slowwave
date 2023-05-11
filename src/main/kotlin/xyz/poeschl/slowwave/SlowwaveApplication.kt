@@ -78,7 +78,9 @@ class SlowwaveApplication(host: String, listeningPort: Int,
 
                 sendChannel.writeStringUtf8(response + "\n")
               } else {
-                offsetCommand.removeOffsetForSocket(socket.remoteAddress.toString())
+                val socketIdentifier = socket.remoteAddress.toString()
+                tokenCommand.removeTokensForSocket(socketIdentifier)
+                offsetCommand.removeOffsetForSocket(socketIdentifier)
                 socket.close()
               }
             }
