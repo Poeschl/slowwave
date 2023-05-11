@@ -37,7 +37,7 @@ class Px(private val drawFilters: FilterManager<PxRequest>,
       ""
     } catch (filterEx: FilterException) {
       LOGGER.debug { "Draw exception: ${filterEx.message}" }
-      filterEx.message ?: "ERROR"
+      "ERR ${filterEx.message ?: "(╯°□°）╯︵ ┻━┻"}"
     }
   }
 

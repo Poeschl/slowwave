@@ -33,7 +33,7 @@ An example flow:
 
 ```text
 -> PX 1 1 ff0000
-<- Invalid Token
+<- ERR Invalid Token
 
 -> TOKEN
 <- TOKEN a466bb98-492e-4770-a772-b0b477bf26a7 100
