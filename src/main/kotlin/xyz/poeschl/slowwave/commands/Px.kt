@@ -20,9 +20,19 @@ class Px(private val drawFilters: FilterManager<PxRequest>,
 
   override fun handleCommand(request: Request): String {
     return if (request.cmd.size > 3) {
-      draw(PxRequest.fromRequest(request))
+      try {
+        draw(PxRequest.fromRequest(request))
+      } catch (ex: NumberFormatException) {
+        "ERR Invalid number format"
+      } catch (ex: IndexOutOfBoundsException) {
+        "ERR Could not parse PX command"
+      }
     } else {
-      retrieve(request.cmd)
+      try {
+        retrieve(request.cmd)
+      } catch (ex: IndexOutOfBoundsException) {
+        "ERR Could not parse PX command"
+      }
     }
   }
 
