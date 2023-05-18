@@ -75,24 +75,24 @@ class SlowwaveApplication(host: String, listeningPort: Int,
 
                 sendChannel.writeStringUtf8(response + "\n")
               } else {
-                closeSocket(socket)
+                triggerEventsOnSocketClose(socket)
               }
             }
-            closeSocket(socket)
           } catch (e: Throwable) {
-            closeSocket(socket)
+            triggerEventsOnSocketClose(socket)
+          } finally {
+            socket.close()
           }
         }
       }
     }
   }
 
-  private fun closeSocket(socket: Socket) {
-    if (!socket.isClosed) {
+  private fun triggerEventsOnSocketClose(socket: Socket) {
+    if (!socket.isClosed && socket.isActive) {
       val socketIdentifier = socket.remoteAddress.toString()
       tokenCommand.removeTokensForSocket(socketIdentifier)
       offsetCommand.removeOffsetForSocket(socketIdentifier)
-      socket.close()
     }
   }
 }
