@@ -88,11 +88,12 @@ class SlowwaveApplication(host: String, listeningPort: Int,
   }
 
   private fun closeSocket(socket: Socket) {
-    val socketIdentifier = socket.remoteAddress.toString()
-    tokenCommand.removeTokensForSocket(socketIdentifier)
-    offsetCommand.removeOffsetForSocket(socketIdentifier)
-    LOGGER.debug { "Close connection from ${socket.remoteAddress}" }
-    socket.close()
+    if (!socket.isClosed) {
+      val socketIdentifier = socket.remoteAddress.toString()
+      tokenCommand.removeTokensForSocket(socketIdentifier)
+      offsetCommand.removeOffsetForSocket(socketIdentifier)
+      socket.close()
+    }
   }
 }
 
