@@ -39,8 +39,8 @@ class Statistics {
   fun getOutput(): String {
     return """
            { "pixel_per_second": ${pixelPerSecond},
-             "createdToken": $createdTokens },
-             "openConnections": $openConnections
+             "createdToken": $createdTokens,
+             "openConnections": $openConnections }
            """.trimIndent().trimNewline()
   }
 }
