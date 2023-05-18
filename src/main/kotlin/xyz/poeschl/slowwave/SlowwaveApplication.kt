@@ -59,51 +59,57 @@ class SlowwaveApplication(host: String, listeningPort: Int,
         launch(Dispatchers.IO) {
           val receiveChannel = socket.openReadChannel()
           val sendChannel = socket.openWriteChannel(autoFlush = true)
+          var channelStarting = true
 
           try {
-            while (receiveChannel.availableForRead > 0) {
+            while (channelStarting || receiveChannel.availableForRead > 0) {
               val input = receiveChannel.readUTF8Line()
               if (input != null) {
                 val request = Request(socket.remoteAddress.toString(), input.split(" "))
 
                 val response =
-                    when (request.cmd[0]) {
-                      pxCommand.command -> pxCommand.handleCommand(request)
-                      tokenCommand.command -> tokenCommand.handleCommand(request)
-                      sizeCommand.command -> sizeCommand.handleCommand(request)
-                      offsetCommand.command -> offsetCommand.handleCommand(request)
-                      helpCommand.command -> helpCommand.handleCommand(request)
-                      else -> ""
-                    }
+                        when (request.cmd[0]) {
+                          pxCommand.command -> pxCommand.handleCommand(request)
+                          tokenCommand.command -> tokenCommand.handleCommand(request)
+                          sizeCommand.command -> sizeCommand.handleCommand(request)
+                          offsetCommand.command -> offsetCommand.handleCommand(request)
+                          helpCommand.command -> helpCommand.handleCommand(request)
+                          else -> ""
+                        }
 
                 sendChannel.writeStringUtf8(response + "\n")
+                channelStarting = false
               } else {
-                val socketIdentifier = socket.remoteAddress.toString()
-                tokenCommand.removeTokensForSocket(socketIdentifier)
-                offsetCommand.removeOffsetForSocket(socketIdentifier)
-                socket.close()
+                closeSocket(socket)
               }
             }
+            closeSocket(socket)
           } catch (e: Throwable) {
-            val socketIdentifier = socket.remoteAddress.toString()
-            tokenCommand.removeTokensForSocket(socketIdentifier)
-            offsetCommand.removeOffsetForSocket(socketIdentifier)
-            socket.close()
+            closeSocket(socket)
           }
         }
       }
     }
   }
+
+  private fun closeSocket(socket: Socket) {
+    val socketIdentifier = socket.remoteAddress.toString()
+    tokenCommand.removeTokensForSocket(socketIdentifier)
+    offsetCommand.removeOffsetForSocket(socketIdentifier)
+    LOGGER.info { "Close connection from ${socket.remoteAddress}" }
+    socket.close()
+  }
 }
+
 
 fun main(args: Array<String>) = mainBody {
   ArgParser(args).parseInto(::Args).run {
     (KotlinLogging.logger(Logger.ROOT_LOGGER_NAME).underlyingLogger as Logger).level =
-        if (debug) {
-          Level.DEBUG
-        } else {
-          Level.INFO
-        }
+            if (debug) {
+              Level.DEBUG
+            } else {
+              Level.INFO
+            }
 
     SlowwaveApplication(host, port, width, height, webport, tokenFlag, useCountPerToken).run()
   }
