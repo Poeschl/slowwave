@@ -79,7 +79,11 @@ class SlowwaveApplication(host: String, listeningPort: Int,
               }
             }
           } catch (e: Throwable) {
-            LOGGER.error(e) { "Error on socket loop" }
+            if (e.message.equals("Broken pipe")) {
+              LOGGER.info { "Broken pipe" }
+            } else {
+              LOGGER.error(e) { "Error on socket loop" }
+            }
           } finally {
             tokenCommand.removeTokensForSocket(remoteAddress)
             offsetCommand.removeOffsetForSocket(remoteAddress)
