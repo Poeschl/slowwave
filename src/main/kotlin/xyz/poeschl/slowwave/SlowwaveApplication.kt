@@ -22,7 +22,6 @@ class SlowwaveApplication(host: String, listeningPort: Int,
 
   companion object {
     private val LOGGER = KotlinLogging.logger {}
-    private const val MAX_OPEN_CONNECTIONS = 20000
   }
 
   private val selectorManager = SelectorManager(Dispatchers.IO)
@@ -64,11 +63,6 @@ class SlowwaveApplication(host: String, listeningPort: Int,
             val sendChannel = socket.openWriteChannel(autoFlush = true)
             val remoteAddress = socket.remoteAddress.toString()
 
-            if (openConnections >= MAX_OPEN_CONNECTIONS) {
-              sendChannel.writeStringUtf8("ERR Max connections reached")
-              socket.close()
-              return@launch
-            }
             openConnections++
             statistics.syncConnectionCount(openConnections)
 
@@ -93,8 +87,10 @@ class SlowwaveApplication(host: String, listeningPort: Int,
                 }
               }
             } catch (e: Exception) {
-              if (e.message.equals("Broken pipe")) {
-                LOGGER.info { "Broken pipe" }
+              if (e.message?.contains("Broken pipe") == true) {
+                LOGGER.debug { "Broken pipe" }
+              } else if (e.message?.contains("Connection reset by peer") == true) {
+                LOGGER.debug { "Connection reset by peer" }
               } else {
                 LOGGER.error(e) { "Error on socket loop" }
               }
