@@ -8,10 +8,7 @@ import com.xenomachina.argparser.mainBody
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.utils.io.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import mu.KotlinLogging
 import xyz.poeschl.kixelflut.PixelMatrix
 import xyz.poeschl.slowwave.commands.*
@@ -59,10 +56,9 @@ class SlowwaveApplication(host: String, listeningPort: Int,
         launch(Dispatchers.IO) {
           val receiveChannel = socket.openReadChannel()
           val sendChannel = socket.openWriteChannel(autoFlush = true)
-          var channelStarting = true
 
           try {
-            while (channelStarting || receiveChannel.availableForRead > 0) {
+            while (socket.isActive) {
               val input = receiveChannel.readUTF8Line()
               if (input != null) {
                 val request = Request(socket.remoteAddress.toString(), input.split(" "))
@@ -78,7 +74,6 @@ class SlowwaveApplication(host: String, listeningPort: Int,
                         }
 
                 sendChannel.writeStringUtf8(response + "\n")
-                channelStarting = false
               } else {
                 closeSocket(socket)
               }
@@ -96,7 +91,7 @@ class SlowwaveApplication(host: String, listeningPort: Int,
     val socketIdentifier = socket.remoteAddress.toString()
     tokenCommand.removeTokensForSocket(socketIdentifier)
     offsetCommand.removeOffsetForSocket(socketIdentifier)
-    LOGGER.info { "Close connection from ${socket.remoteAddress}" }
+    LOGGER.debug { "Close connection from ${socket.remoteAddress}" }
     socket.close()
   }
 }
