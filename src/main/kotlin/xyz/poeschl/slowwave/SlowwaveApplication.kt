@@ -56,12 +56,13 @@ class SlowwaveApplication(host: String, listeningPort: Int,
         launch(Dispatchers.IO) {
           val receiveChannel = socket.openReadChannel()
           val sendChannel = socket.openWriteChannel(autoFlush = true)
+          val remoteAddress = socket.remoteAddress.toString()
 
           try {
             while (socket.isActive) {
               val input = receiveChannel.readUTF8Line()
               if (input != null) {
-                val request = Request(socket.remoteAddress.toString(), input.split(" "))
+                val request = Request(remoteAddress, input.split(" "))
 
                 val response =
                         when (request.cmd[0]) {
@@ -74,25 +75,17 @@ class SlowwaveApplication(host: String, listeningPort: Int,
                         }
 
                 sendChannel.writeStringUtf8(response + "\n")
-              } else {
-                triggerEventsOnSocketClose(socket)
               }
             }
           } catch (e: Throwable) {
-            triggerEventsOnSocketClose(socket)
+            LOGGER.error(e) { "Error on socket loop" }
           } finally {
+            tokenCommand.removeTokensForSocket(remoteAddress)
+            offsetCommand.removeOffsetForSocket(remoteAddress)
             socket.close()
           }
         }
       }
-    }
-  }
-
-  private fun triggerEventsOnSocketClose(socket: Socket) {
-    if (!socket.isClosed && socket.isActive) {
-      val socketIdentifier = socket.remoteAddress.toString()
-      tokenCommand.removeTokensForSocket(socketIdentifier)
-      offsetCommand.removeOffsetForSocket(socketIdentifier)
     }
   }
 }
