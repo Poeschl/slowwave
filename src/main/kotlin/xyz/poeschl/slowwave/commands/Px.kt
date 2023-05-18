@@ -31,14 +31,22 @@ class Px(private val drawFilters: FilterManager<PxRequest>,
       val modifiedRequest = drawFilters.applyAllFilter(request)
       val pixel = modifiedRequest.pixel
 
-      LOGGER.debug { "Drawing pixel (${pixel.point.x}, ${pixel.point.y}) -> #${pixel.color.toHex()}" }
-      pixelMatrix.insert(pixel)
-      statistics.increasePixelCount()
-      ""
+      if (pointInMatrix(pixel.point)) {
+        LOGGER.debug { "Drawing pixel (${pixel.point.x}, ${pixel.point.y}) -> #${pixel.color.toHex()}" }
+        pixelMatrix.insert(pixel)
+        statistics.increasePixelCount()
+        ""
+      } else {
+        "ERR Out of canvas size"
+      }
     } catch (filterEx: FilterException) {
       LOGGER.debug { "Draw exception: ${filterEx.message}" }
       "ERR ${filterEx.message ?: "(╯°□°）╯︵ ┻━┻"}"
     }
+  }
+
+  private fun pointInMatrix(point: Point): Boolean {
+    return point.x >= 0 && point.x < pixelMatrix.width && point.y >= 0 && point.y < pixelMatrix.height
   }
 
   private fun retrieve(request: List<String>): String {
