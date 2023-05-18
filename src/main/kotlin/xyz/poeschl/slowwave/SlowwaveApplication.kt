@@ -73,8 +73,9 @@ class SlowwaveApplication(host: String, listeningPort: Int,
                           helpCommand.command -> helpCommand.handleCommand(request)
                           else -> ""
                         }
-
-                sendChannel.writeStringUtf8(response + "\n")
+                if (response.isNotBlank()) {
+                  sendChannel.writeStringUtf8(response + "\n")
+                }
               }
             }
           } catch (e: Throwable) {
