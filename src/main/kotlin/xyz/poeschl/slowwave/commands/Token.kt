@@ -14,7 +14,7 @@ class Token(private val enabled: Boolean, private val useCountPerToken: Int, pri
   private val tokenMap = mutableMapOf<String, String>()
   private val tokenCounter = mutableMapOf<String, Int>()
 
-  override fun handleCommand(request: Request): String {
+  override suspend fun handleCommand(request: Request): String {
     if (enabled) {
       if (!tokenMap.containsKey(getHost(request.remote))) {
         val newToken = generateToken()

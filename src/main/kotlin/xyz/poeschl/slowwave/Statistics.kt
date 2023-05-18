@@ -1,5 +1,6 @@
 package xyz.poeschl.slowwave
 
+import com.xenomachina.text.trimNewline
 import mu.KotlinLogging
 import java.util.*
 
@@ -12,6 +13,7 @@ class Statistics {
   private var pixelCount: Int = 0
   private var pixelPerSecond: Int = 0
   private var createdTokens: Int = 0
+  private var openConnections: Int = 0
 
   init {
     Timer().schedule(object : TimerTask() {
@@ -30,9 +32,15 @@ class Statistics {
     createdTokens++
   }
 
+  fun syncConnectionCount(openConnections: Int) {
+    this.openConnections = openConnections
+  }
+
   fun getOutput(): String {
     return """
-           { "pixel_per_second": ${pixelPerSecond}, "createdToken": $createdTokens }
-           """.trimIndent()
+           { "pixel_per_second": ${pixelPerSecond},
+             "createdToken": $createdTokens },
+             "openConnections": $openConnections
+           """.trimIndent().trimNewline()
   }
 }

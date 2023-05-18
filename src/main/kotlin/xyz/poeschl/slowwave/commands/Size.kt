@@ -12,7 +12,7 @@ class Size(private val pixelMatrix: PixelMatrix) : BaseCommand {
 
   override val command = "SIZE"
 
-  override fun handleCommand(request: Request): String {
+  override suspend fun handleCommand(request: Request): String {
     LOGGER.debug { "Retrieve playground size" }
     return "SIZE ${pixelMatrix.width} ${pixelMatrix.height}"
   }

@@ -10,5 +10,5 @@ interface BaseCommand {
      * Handles a command. The full command is received by list which is the space separated request text.
      * The returned string will be the response of the tcp request.
      */
-    fun handleCommand(request: Request): String
+    suspend fun handleCommand(request: Request): String
 }

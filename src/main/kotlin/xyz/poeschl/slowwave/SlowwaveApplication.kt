@@ -13,6 +13,7 @@ import mu.KotlinLogging
 import xyz.poeschl.kixelflut.PixelMatrix
 import xyz.poeschl.slowwave.commands.*
 import xyz.poeschl.slowwave.filter.FilterManager
+import java.util.concurrent.Executors
 
 class SlowwaveApplication(host: String, listeningPort: Int,
                           width: Int, height: Int,
@@ -21,6 +22,7 @@ class SlowwaveApplication(host: String, listeningPort: Int,
 
   companion object {
     private val LOGGER = KotlinLogging.logger {}
+    private const val MAX_OPEN_CONNECTIONS = 20000
   }
 
   private val selectorManager = SelectorManager(Dispatchers.IO)
@@ -43,6 +45,8 @@ class SlowwaveApplication(host: String, listeningPort: Int,
     pxCommandFilters.addFilter(offsetCommand.getFilter())
     pxCommandFilters.addFilter(tokenCommand.getFilter())
 
+    var openConnections = 0
+
     runBlocking {
       LOGGER.info { "Server is listening at ${serverSocket.localAddress}" }
 
@@ -54,10 +58,19 @@ class SlowwaveApplication(host: String, listeningPort: Int,
         try {
           val socket = serverSocket.accept()
           LOGGER.info { "Accepted connection from ${socket.remoteAddress}" }
-          launch(Dispatchers.IO) {
+
+          launch(Executors.newCachedThreadPool().asCoroutineDispatcher()) {
             val receiveChannel = socket.openReadChannel()
             val sendChannel = socket.openWriteChannel(autoFlush = true)
             val remoteAddress = socket.remoteAddress.toString()
+
+            if (openConnections >= MAX_OPEN_CONNECTIONS) {
+              sendChannel.writeStringUtf8("ERR Max connections reached")
+              socket.close()
+              return@launch
+            }
+            openConnections++
+            statistics.syncConnectionCount(openConnections)
 
             try {
               while (socket.isActive) {
@@ -66,8 +79,8 @@ class SlowwaveApplication(host: String, listeningPort: Int,
                   val request = Request(remoteAddress, input.split(" "))
 
                   val response =
-                          when (request.cmd[0]) {
-                            pxCommand.command -> pxCommand.handleCommand(request)
+                      when (request.cmd[0]) {
+                        pxCommand.command -> pxCommand.handleCommand(request)
                             tokenCommand.command -> tokenCommand.handleCommand(request)
                             sizeCommand.command -> sizeCommand.handleCommand(request)
                             offsetCommand.command -> offsetCommand.handleCommand(request)
@@ -89,6 +102,7 @@ class SlowwaveApplication(host: String, listeningPort: Int,
               tokenCommand.removeTokensForSocket(remoteAddress)
               offsetCommand.removeOffsetForSocket(remoteAddress)
               socket.close()
+              openConnections--
             }
           }
         } catch (ex: Exception) {

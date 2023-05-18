@@ -18,7 +18,7 @@ class Px(private val drawFilters: FilterManager<PxRequest>,
 
   override val command = "PX"
 
-  override fun handleCommand(request: Request): String {
+  override suspend fun handleCommand(request: Request): String {
     return if (request.cmd.size > 3) {
       try {
         draw(PxRequest.fromRequest(request))

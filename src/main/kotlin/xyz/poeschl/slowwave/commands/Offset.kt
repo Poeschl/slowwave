@@ -17,7 +17,7 @@ class Offset : BaseCommand {
 
   override val command = "OFFSET"
 
-  override fun handleCommand(request: Request): String {
+  override suspend fun handleCommand(request: Request): String {
     val offset = Point(request.cmd[1].toInt(), request.cmd[2].toInt())
     LOGGER.debug { "Set the offset $offset for ${request.remote}" }
 
