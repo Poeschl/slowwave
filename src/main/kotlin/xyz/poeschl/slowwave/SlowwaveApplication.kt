@@ -51,44 +51,48 @@ class SlowwaveApplication(host: String, listeningPort: Int,
       }
 
       while (true) {
-        val socket = serverSocket.accept()
-        LOGGER.info { "Accepted connection from ${socket.remoteAddress}" }
-        launch(Dispatchers.IO) {
-          val receiveChannel = socket.openReadChannel()
-          val sendChannel = socket.openWriteChannel(autoFlush = true)
-          val remoteAddress = socket.remoteAddress.toString()
+        try {
+          val socket = serverSocket.accept()
+          LOGGER.info { "Accepted connection from ${socket.remoteAddress}" }
+          launch(Dispatchers.IO) {
+            val receiveChannel = socket.openReadChannel()
+            val sendChannel = socket.openWriteChannel(autoFlush = true)
+            val remoteAddress = socket.remoteAddress.toString()
 
-          try {
-            while (socket.isActive) {
-              val input = receiveChannel.readUTF8Line()
-              if (input != null) {
-                val request = Request(remoteAddress, input.split(" "))
+            try {
+              while (socket.isActive) {
+                val input = receiveChannel.readUTF8Line()
+                if (input != null) {
+                  val request = Request(remoteAddress, input.split(" "))
 
-                val response =
-                        when (request.cmd[0]) {
-                          pxCommand.command -> pxCommand.handleCommand(request)
-                          tokenCommand.command -> tokenCommand.handleCommand(request)
-                          sizeCommand.command -> sizeCommand.handleCommand(request)
-                          offsetCommand.command -> offsetCommand.handleCommand(request)
-                          helpCommand.command -> helpCommand.handleCommand(request)
-                          else -> ""
-                        }
-                if (response.isNotBlank()) {
-                  sendChannel.writeStringUtf8(response + "\n")
+                  val response =
+                          when (request.cmd[0]) {
+                            pxCommand.command -> pxCommand.handleCommand(request)
+                            tokenCommand.command -> tokenCommand.handleCommand(request)
+                            sizeCommand.command -> sizeCommand.handleCommand(request)
+                            offsetCommand.command -> offsetCommand.handleCommand(request)
+                            helpCommand.command -> helpCommand.handleCommand(request)
+                            else -> ""
+                          }
+                  if (response.isNotBlank()) {
+                    sendChannel.writeStringUtf8(response + "\n")
+                  }
                 }
               }
+            } catch (e: Exception) {
+              if (e.message.equals("Broken pipe")) {
+                LOGGER.info { "Broken pipe" }
+              } else {
+                LOGGER.error(e) { "Error on socket loop" }
+              }
+            } finally {
+              tokenCommand.removeTokensForSocket(remoteAddress)
+              offsetCommand.removeOffsetForSocket(remoteAddress)
+              socket.close()
             }
-          } catch (e: Throwable) {
-            if (e.message.equals("Broken pipe")) {
-              LOGGER.info { "Broken pipe" }
-            } else {
-              LOGGER.error(e) { "Error on socket loop" }
-            }
-          } finally {
-            tokenCommand.removeTokensForSocket(remoteAddress)
-            offsetCommand.removeOffsetForSocket(remoteAddress)
-            socket.close()
           }
+        } catch (ex: Exception) {
+          LOGGER.error(ex) { "General error" }
         }
       }
     }
