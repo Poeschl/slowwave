@@ -89,11 +89,11 @@ class WebServer(host: String, port: Int, private val pixelMatrix: PixelMatrix, p
   private suspend fun handleImageWebCall(call: ApplicationCall) {
     call.response.header("Cache-Control", "no-cache, private")
     call.response.status(HttpStatusCode.OK)
-    call.respondBytes(imageData, ContentType("image", "png"))
+    call.respondBytes(imageData, ContentType("image", "webp"))
   }
 
   private fun updateImage() {
-    val shadowBytes = imageToPngBytes(pixelMatrixToImage(pixelMatrix))
+    val shadowBytes = bufferedImageToImageBytes(pixelMatrixToImage(pixelMatrix))
     imageData = shadowBytes
   }
 
@@ -115,11 +115,11 @@ class WebServer(host: String, port: Int, private val pixelMatrix: PixelMatrix, p
     return img
   }
 
-  private fun imageToPngBytes(inputImage: BufferedImage): ByteArray {
+  private fun bufferedImageToImageBytes(inputImage: BufferedImage): ByteArray {
     val bytesStream = ByteArrayOutputStream()
     val imageOutputStream = MemoryCacheImageOutputStream(bytesStream)
 
-    val imageWriter = ImageIO.getImageWritersByFormatName("png").next()
+    val imageWriter = ImageIO.getImageWritersByMIMEType("image/webp").next()
     imageWriter.output = imageOutputStream
     imageWriter.write(null, IIOImage(inputImage, null, null), null)
     imageWriter.dispose()
