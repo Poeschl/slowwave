@@ -70,6 +70,7 @@ class SlowwaveApplication(host: String, listeningPort: Int,
               while (true) {
                 val input = receiveChannel.readUTF8Line()
                 if (input == null) {
+                  // Client has closed the connection.
                   break;
                 }
 
