@@ -24,10 +24,13 @@ More coming soon...
 ### The `TOKEN` command
 
 When the `TOKEN` command is enabled with commandline flag `--token` every `PX` command requires a token to paint.
-One token is valid for the ip the request is sent from and will last 100 `PX` calls.
-The usage count can be changed with the `--useCountPerToken <value>` commandline parameter.
+One token is valid for the ip the request is sent from and will last a specific amount of `PX` calls.
+The usage count can be changed with the `--useCountPerToken <value>` commandline parameter, per default its `100` calls.
 
-All `PX` commands must specify an additional parameter, which is the token.
+To retrieve a token the `TOKEN` command can be called. This command is rate-limited to 1 call per second!
+In combination with the use count a rate limit for painting actions per host is established.
+
+All `PX` painting commands must specify an additional parameter, which is the token.
 
 An example flow:
 
@@ -43,7 +46,6 @@ An example flow:
 
 -> PX 1 1 ff0000 a466bb98-492e-4770-a772-b0b477bf26a7
 <- 
-🮱
 ```
 
 ## Running

@@ -5,6 +5,8 @@ import xyz.poeschl.slowwave.PxRequest
 import xyz.poeschl.slowwave.Request
 import xyz.poeschl.slowwave.Statistics
 import xyz.poeschl.slowwave.filter.BaseFilter
+import java.time.Duration
+import java.time.ZonedDateTime
 import java.util.*
 
 class Token(private val enabled: Boolean, private val useCountPerToken: Int, private val statistics: Statistics) : BaseCommand {
@@ -13,21 +15,31 @@ class Token(private val enabled: Boolean, private val useCountPerToken: Int, pri
 
   private val tokenMap = mutableMapOf<String, String>()
   private val tokenCounter = mutableMapOf<String, Int>()
+  private val lastTokenRequest = mutableMapOf<String, ZonedDateTime>()
 
   override suspend fun handleCommand(request: Request): String {
     if (enabled) {
-      if (!tokenMap.containsKey(getHost(request.remote))) {
-        val newToken = generateToken()
-        tokenMap[getHost(request.remote)] = newToken
-        tokenCounter[newToken] = useCountPerToken
-        statistics.increaseTokenCount()
-        return "TOKEN $newToken $useCountPerToken"
+      val host = getHost(request.remote)
+      if (!tokenMap.containsKey(host)) {
+        val now = ZonedDateTime.now()
+        if (!lastTokenRequest.containsKey(host) || Duration.between(lastTokenRequest[host], now).toSeconds() >= 1) {
+          val newToken = generateToken()
+          tokenMap[getHost(request.remote)] = newToken
+          tokenCounter[newToken] = useCountPerToken
+          lastTokenRequest[host] = now
+
+          statistics.increaseTokenCount()
+          return "TOKEN $newToken $useCountPerToken"
+        } else {
+          return "ERR Too many TOKEN requests per second"
+        }
+
       } else {
         val token = tokenMap[getHost(request.remote)]
         return "TOKEN $token ${tokenCounter[token].toString()}"
       }
     } else {
-      return "Token inactive"
+      return "ERR Token inactive"
     }
   }
 
