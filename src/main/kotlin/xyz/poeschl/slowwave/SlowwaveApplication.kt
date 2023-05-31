@@ -67,23 +67,26 @@ class SlowwaveApplication(host: String, listeningPort: Int,
             statistics.syncConnectionCount(openConnections)
 
             try {
-              while (socket.isActive) {
+              while (true) {
                 val input = receiveChannel.readUTF8Line()
-                if (input != null) {
-                  val request = Request(remoteAddress, input.split(" "))
+                if (input == null) {
+                  // Client has closed the connection.
+                  break;
+                }
 
-                  val response =
-                      when (request.cmd[0]) {
-                        pxCommand.command -> pxCommand.handleCommand(request)
-                            tokenCommand.command -> tokenCommand.handleCommand(request)
-                            sizeCommand.command -> sizeCommand.handleCommand(request)
-                            offsetCommand.command -> offsetCommand.handleCommand(request)
-                            helpCommand.command -> helpCommand.handleCommand(request)
-                            else -> ""
-                          }
-                  if (response.isNotBlank()) {
-                    sendChannel.writeStringUtf8(response + "\n")
-                  }
+                val request = Request(remoteAddress, input.split(" "))
+
+                val response =
+                    when (request.cmd[0]) {
+                      pxCommand.command -> pxCommand.handleCommand(request)
+                          tokenCommand.command -> tokenCommand.handleCommand(request)
+                          sizeCommand.command -> sizeCommand.handleCommand(request)
+                          offsetCommand.command -> offsetCommand.handleCommand(request)
+                          helpCommand.command -> helpCommand.handleCommand(request)
+                          else -> ""
+                        }
+                if (response.isNotBlank()) {
+                  sendChannel.writeStringUtf8(response + "\n")
                 }
               }
             } catch (e: Exception) {
