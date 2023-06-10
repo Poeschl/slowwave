@@ -33,6 +33,7 @@ class Token(private val enabled: Boolean, private val useCountPerToken: Int, pri
         val token = tokenMap[getHost(request.remote)]
 
         return if (!tokenCounter.containsKey(token) || tokenCounter[token] == 0) {
+          tokenCounter.remove(token)
           genToken(host)
         } else {
           "TOKEN $token ${tokenCounter[token].toString()}"
