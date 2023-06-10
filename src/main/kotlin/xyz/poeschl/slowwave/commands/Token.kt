@@ -9,7 +9,8 @@ import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.*
 
-class Token(private val enabled: Boolean, private val useCountPerToken: Int, private val statistics: Statistics) : BaseCommand {
+class Token(private val enabled: Boolean, private val useCountPerToken: Int, private val statistics: Statistics) :
+  BaseCommand {
 
   override val command = "TOKEN"
 
@@ -23,24 +24,33 @@ class Token(private val enabled: Boolean, private val useCountPerToken: Int, pri
       if (!tokenMap.containsKey(host)) {
         val now = ZonedDateTime.now()
         if (!lastTokenRequest.containsKey(host) || Duration.between(lastTokenRequest[host], now).toSeconds() >= 1) {
-          val newToken = generateToken()
-          tokenMap[getHost(request.remote)] = newToken
-          tokenCounter[newToken] = useCountPerToken
-          lastTokenRequest[host] = now
-
-          statistics.increaseTokenCount()
-          return "TOKEN $newToken $useCountPerToken"
+          return genToken(host)
         } else {
           return "ERR Too many TOKEN requests per second"
         }
 
       } else {
         val token = tokenMap[getHost(request.remote)]
-        return "TOKEN $token ${tokenCounter[token].toString()}"
+
+        return if (!tokenCounter.containsKey(token) || tokenCounter[token] == 0) {
+          genToken(host)
+        } else {
+          "TOKEN $token ${tokenCounter[token].toString()}"
+        }
       }
     } else {
       return "ERR Token inactive"
     }
+  }
+
+  private fun genToken(host: String): String {
+    val newToken = generateToken()
+    tokenMap[host] = newToken
+    tokenCounter[newToken] = useCountPerToken
+    lastTokenRequest[host] = ZonedDateTime.now()
+
+    statistics.increaseTokenCount()
+    return "TOKEN $newToken $useCountPerToken"
   }
 
   fun removeTokensForSocket(socket: String) {
@@ -59,13 +69,14 @@ class Token(private val enabled: Boolean, private val useCountPerToken: Int, pri
     }
 
     val currentCount = tokenCounter.getOrDefault(token, 0)
-    return if (currentCount > 0) {
-      tokenCounter[token] = currentCount - 1
-      true
+    val update = currentCount - 1
+    if (update >= 0) {
+      tokenCounter[token] = update
+      return true
     } else {
       tokenCounter.remove(token)
       tokenMap.remove(storedToken)
-      false
+      return false
     }
   }
 
