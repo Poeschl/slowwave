@@ -71,7 +71,7 @@ class Token(private val enabled: Boolean, private val useCountPerToken: Int, pri
 
     val currentCount = tokenCounter.getOrDefault(token, 0)
     val update = currentCount - 1
-    if (update >= 0) {
+    if (update > 0) {
       tokenCounter[token] = update
       return true
     } else {
