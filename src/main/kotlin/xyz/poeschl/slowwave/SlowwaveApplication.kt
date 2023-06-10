@@ -33,7 +33,7 @@ class SlowwaveApplication(host: String, listeningPort: Int,
 
   private val pxCommandFilters = FilterManager<PxRequest>()
 
-  private val helpCommand = Help()
+  private val helpCommand = Help(tokenFlag)
   private val sizeCommand = Size(pixelMatrix)
   private val pxCommand = Px(pxCommandFilters, pixelMatrix, statistics)
   private val offsetCommand = Offset()

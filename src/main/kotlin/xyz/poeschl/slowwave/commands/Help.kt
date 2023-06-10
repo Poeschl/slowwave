@@ -2,10 +2,11 @@ package xyz.poeschl.slowwave.commands
 
 import xyz.poeschl.slowwave.Request
 
-class Help : BaseCommand {
+class Help(private val showToken: Boolean) : BaseCommand {
 
-    override val command = "HELP"
-    override suspend fun handleCommand(request: Request): String = """
+  override val command = "HELP"
+  override suspend fun handleCommand(request: Request): String {
+    var helpText = """
                _.====.._
              ,:._       ~-_
                  `\        ~-_
@@ -22,4 +23,14 @@ class Help : BaseCommand {
         SIZE: Get the size of the drawing surface, Example reply: `SIZE 1920 1080`
         OFFSET x y: Apply offset (x,y) to all your future commands
     """.trimIndent()
+
+    if (showToken) {
+      helpText += """
+        
+        TOKEN: Retrieve a token for painting commands        
+      """.trimIndent()
+    }
+
+    return helpText
+  }
 }
